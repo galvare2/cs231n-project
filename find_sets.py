@@ -1,5 +1,5 @@
 #core algorithm adapted from http://code.activestate.com/recipes/578508-finding-sets-in-the-card-game-set/
-
+import sys
 # bit masks for low and high bits of the attributes        
 mask0 = sum(1<<(2*i) for i in range(4))    # 01010101
 mask1 = sum(1<<(2*i+1) for i in range(4))  # 10101010
@@ -16,7 +16,7 @@ def find_all_sets(bit_cards):  # using thirdcard_fast
         	k = have[third_card_bits]
         	if k > j:  # False if k is None, prevents doubly counting sets
         		found.append((bit_cards[ci],bit_cards[cj],bit_cards[third_card_bits]))
-	return found
+    return found
   
 # which third card is needed to complete the set
 # using the 8-bit representation
@@ -38,7 +38,10 @@ def convert_to_bits(set_table):
 # indicate the particular type of a given quality (color, shape, shading, number) and 
 # whose values are labels (positions) of set cards
 
-def main(set_table):
+def main():
+	set_table = set_table = {(0,2,2,2): '1', (2,1,1,2): '2', (1,0,1,2): '3',  (0,1,0,1): '4',
+	(2,2,2,1): '5', (1,2,2,0):'6', (1,1,1,0): '7', (0,0,1,0):'8', (1,2,1,2): '9',
+	(0,0,0,1): '10', (2,2,0,2):'11', (2,2,1,0): '12'}
 	bit_cards = convert_to_bits(set_table)
 	all_sets = find_all_sets(bit_cards)
 	print all_sets
@@ -47,3 +50,4 @@ def main(set_table):
 if __name__ == "__main__":
     main()
                
+#set_table = {(2,0,1,0): '1', (0,0,0,1): '2', (0,2,2,0): '3', (1,1,0,0): '4', (0,1,1,2):'5', (1,1,2,0): '6'}
