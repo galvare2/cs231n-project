@@ -33,13 +33,14 @@ def convert_to_bits(set_table):
 	bits = lambda attrs: sum(a<<(2*i) for i,a in enumerate(attrs[::-1]))
 	bit_cards = {bits(attributes): label for attributes, label in set_table.iteritems()}
 	return bit_cards
+
 # find_sets.py: Takes in a SET table and returns all sets within it, returning None if there are no sets. 
 # Expects "set_table" to be a dictionary whose key values are length 4 tuples whose values
 # indicate the particular type of a given quality (color, shape, shading, number) and 
 # whose values are labels (positions) of set cards
 
-def main():
-	set_table = set_table = {(0,2,2,2): '1', (2,1,1,2): '2', (1,0,1,2): '3',  (0,1,0,1): '4',
+def find_sets(set_table):
+	example_set_table = {(0,2,2,2): '1', (2,1,1,2): '2', (1,0,1,2): '3',  (0,1,0,1): '4',
 	(2,2,2,1): '5', (1,2,2,0):'6', (1,1,1,0): '7', (0,0,1,0):'8', (1,2,1,2): '9',
 	(0,0,0,1): '10', (2,2,0,2):'11', (2,2,1,0): '12'}
 	bit_cards = convert_to_bits(set_table)
@@ -47,7 +48,17 @@ def main():
 	print all_sets
 	return all_sets
 
-if __name__ == "__main__":
-    main()
+
+# def main():
+# 	set_table = {(0,2,2,2): '1', (2,1,1,2): '2', (1,0,1,2): '3',  (0,1,0,1): '4',
+# 	(2,2,2,1): '5', (1,2,2,0):'6', (1,1,1,0): '7', (0,0,1,0):'8', (1,2,1,2): '9',
+# 	(0,0,0,1): '10', (2,2,0,2):'11', (2,2,1,0): '12'}
+# 	bit_cards = convert_to_bits(set_table)
+# 	all_sets = find_all_sets(bit_cards)
+# 	print all_sets
+# 	return all_sets
+
+# if __name__ == "__main__":
+#     main()
                
 #set_table = {(2,0,1,0): '1', (0,0,0,1): '2', (0,2,2,0): '3', (1,1,0,0): '4', (0,1,1,2):'5', (1,1,2,0): '6'}
