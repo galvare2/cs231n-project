@@ -1,8 +1,7 @@
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
 from scipy import ndimage, misc
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 
 DATA_LOCATION = "data/"
 TEST_DATA_RATIO = 0.1
@@ -12,7 +11,7 @@ IMAGE_HEIGHT = 128
 IMAGE_WIDTH = 128
 
 def train(data):
-
+	pass
 
 '''
 load_data:
@@ -20,8 +19,8 @@ Reads in all the data from the data/ folder. Assumes the images are named accord
 values. Returns a dict data containing all the X and y values cut up into train, val, test sets.
 This will include augmented data.
 '''
-def load_data():
 
+def load_data():
 	# Read each image
 	data = {}
 	X_all = []
@@ -30,14 +29,17 @@ def load_data():
 		for i_2 in range(3):
 			for i_3 in range(3):
 				for i_4 in range(3):
-					(img, labels) = load_image(i_1, i_2, i_3, i_4, augment=True)
+					(imgs, labels) = load_image(i_1, i_2, i_3, i_4, augment=True)
 					X_all.extend(imgs)
 					y_all.extend(labels)
 	
     # Shuffle X_all, y_all in unison to separate similar/augmented data points
-    p = np.random.permutation(len(X_all))
-    X_all = X_all[p]
-    y_all = y_all[p]
+	X_all = np.stack(X_all, axis=0)
+	y_all = np.stack(y_all, axis=0)
+	print X_all.shape
+	p = np.random.permutation(len(y_all))
+	X_all = X_all[p, :, :, :]
+	y_all = y_all[p, :]
 
     # Apply cutoffs to separate out the data
 	train_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
@@ -48,6 +50,7 @@ def load_data():
 	data['y_val'] = y_all[:val_cutoff]
 	data['X_test'] = X_all[val_cutoff:]
 	data['y_test'] = y_all[val_cutoff:]
+	print data['X_test'].shape
 	return data
 
 '''
