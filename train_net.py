@@ -20,7 +20,7 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
-
+    print (y_val.shape)
     # Create a loss expression for training, i.e., a scalar objective we want
     # to minimize (for our multi-class problem, it is the cross-entropy loss):
     prediction = lasagne.layers.get_output(network)
