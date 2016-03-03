@@ -5,6 +5,8 @@ import numpy as np
 import theano.tensor as T
 import pickle
 
+REG = 1
+
 def iterate_minibatches(inputs, targets, batchsize):
     assert len(inputs) == len(targets)
     for start_idx in range(0, len(inputs) - batchsize+1, batchsize):
@@ -24,7 +26,11 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # Create a loss expression for training, i.e., a scalar objective we want
     # to minimize (for our multi-class problem, it is the cross-entropy loss):
     prediction = lasagne.layers.get_output(network)
-    loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
+    all_params = lasagne.layers.get_all_params(network, trainable=True)
+    # Get all the parameters we don't want to train
+    fixed_params = lasagne.layers.get_all_params(net['fc7_dropout'])
+    params = [x for x in all_params if x not in fixed_params]
+    loss = lasagne.objectives.categorical_crossentropy(prediction, target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2)
     loss = loss.mean()
     # We could add some weight decay as well here, see lasagne.regularization.
 
@@ -33,11 +39,6 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # Descent (SGD) with Nesterov momentum, but Lasagne offers plenty more.
     
     # First get all the parameters
-    all_params = lasagne.layers.get_all_params(network, trainable=True)
-    # Get all the parameters we don't want to train
-    fixed_params = lasagne.layers.get_all_params(net['pool5'])
-    params = [x for x in all_params if x not in fixed_params]
-    print (len(all_params), len(fixed_params), len(params))
     updates = lasagne.updates.nesterov_momentum(
             loss, params, learning_rate=learning_rate, momentum=0.9)
 
@@ -46,7 +47,7 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # disabling dropout layers.
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
     test_loss = lasagne.objectives.categorical_crossentropy(test_prediction,
-                                                            target_var)
+                                                            target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2) 
     test_loss = test_loss.mean()
     # As a bonus, also create an expression for the classification accuracy:
     test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),

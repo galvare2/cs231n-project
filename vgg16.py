@@ -72,8 +72,7 @@ def build_model(input_var, BATCH_SIZE=None):
             W = w[28], b = w[29])
     net['fc7_dropout'] = DropoutLayer(net['fc7'], p=0.5)
     net['fc8'] = DenseLayer(
-            net['fc7_dropout'], num_units=1000, nonlinearity=None,
-            W = w[30], b = w[31])
+            net['fc7_dropout'], num_units=2, nonlinearity=None)
     net['prob'] = NonlinearityLayer(net['fc8'], softmax)
     
     return net#
