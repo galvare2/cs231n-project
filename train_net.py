@@ -31,8 +31,13 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # Create update expressions for training, i.e., how to modify the
     # parameters at each training step. Here, we'll use Stochastic Gradient
     # Descent (SGD) with Nesterov momentum, but Lasagne offers plenty more.
-    params = lasagne.layers.get_all_params(network, trainable=True)
-    print (params)
+    
+    # First get all the parameters
+    all_params = lasagne.layers.get_all_params(network, trainable=True)
+    # Get all the parameters we don't want to train
+    fixed_params = lasagne.layers.get_all_params(net['pool5'])
+    params = [x for x in all_params if x not in fixed_params]
+    print (len(all_params), len(fixed_params), len(params))
     updates = lasagne.updates.nesterov_momentum(
             loss, params, learning_rate=learning_rate, momentum=0.9)
 
