@@ -13,12 +13,17 @@ from lasagne.layers import DropoutLayer
 from lasagne.layers import Pool2DLayer as PoolLayer
 from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
 from lasagne.nonlinearities import softmax
+import pickle
 
 def build_model(input_var, BATCH_SIZE=None):
+    pretrained_weights = pickle.load(open( "vgg16.pkl", "rb" ) )
+    w = pretrained_weights['param values']
     net = {}
     net['input'] = InputLayer(shape=(BATCH_SIZE, 3, 224, 224), input_var=input_var)
     net['conv1_1'] = ConvLayer(
-            net['input'], 64, 3, pad=1, flip_filters=False)
+            net['input'], 64, 3, pad=1, flip_filters=False,
+            W = w[0], b = w[1])
+    print "hi"
     net['conv1_2'] = ConvLayer(
             net['conv1_1'], 64, 3, pad=1, flip_filters=False)
     net['pool1'] = PoolLayer(net['conv1_2'], 2)
