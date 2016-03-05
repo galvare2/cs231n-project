@@ -39,6 +39,7 @@ def load_data():
 	X_all = np.stack(X_all, axis=0).astype('float32')
 	y_all = np.stack(y_all, axis=0).astype('int32')
 	
+        np.random.seed(5)
 	p = np.random.permutation(len(y_all))
 	X_all = X_all[p, :, :, :]
 	y_all = y_all[p]
