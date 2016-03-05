@@ -5,15 +5,16 @@ import numpy as np
 import theano.tensor as T
 import pickle
 
-REG = 1
+REG = 0.2
+LAST_FIXED_LAYER = 'pool5'
 
 def iterate_minibatches(inputs, targets, batchsize):
     assert len(inputs) == len(targets)
     for start_idx in range(0, len(inputs) - batchsize+1, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
-    yield inputs[excerpt], targets[excerpt]
+        yield inputs[excerpt], targets[excerpt]
 
-def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
+def train_net(model='mlp', num_epochs=100, batch_size=100, learning_rate=1e-3):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -22,13 +23,13 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
-    print (y_val.shape)
+    print (y_train.shape)
     # Create a loss expression for training, i.e., a scalar objective we want
     # to minimize (for our multi-class problem, it is the cross-entropy loss):
     prediction = lasagne.layers.get_output(network)
     all_params = lasagne.layers.get_all_params(network, trainable=True)
     # Get all the parameters we don't want to train
-    fixed_params = lasagne.layers.get_all_params(net['fc7_dropout'])
+    fixed_params = lasagne.layers.get_all_params(net[LAST_FIXED_LAYER])
     params = [x for x in all_params if x not in fixed_params]
     loss = lasagne.objectives.categorical_crossentropy(prediction, target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2)
     loss = loss.mean()
@@ -105,9 +106,8 @@ def train_net(model='mlp', num_epochs=100, batch_size=20, learning_rate=1e-3):
         test_acc += acc
         test_batches += 1
     print("Final results:")
-    print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
-    print("  test accuracy:\t\t{:.2f} %".format(
-        test_acc / test_batches * 100))
+    print("  test loss: withheld until final submission lolol")
+    print(" test accuracy: withheld until final submission lolol")
 
     # Optionally, you could now dump the network weights to a file like this:
     # np.savez('model.npz', *lasagne.layers.get_all_param_values(network))

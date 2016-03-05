@@ -46,10 +46,14 @@ def load_data():
 	# Apply cutoffs to separate out the data
 	train_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
 	val_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO))
-	X_train = X_all[:train_cutoff]
+	print(train_cutoff)
+
+        print(val_cutoff)
+        print(y_all.shape)
+        X_train = X_all[:train_cutoff]
 	y_train = y_all[:train_cutoff]
-	X_val = X_all[:val_cutoff]
-	y_val = y_all[:val_cutoff]
+        X_val = X_all[train_cutoff:val_cutoff]
+	y_val = y_all[train_cutoff:val_cutoff]
 	X_test = X_all[val_cutoff:]
 	y_test = y_all[val_cutoff:]
 	return X_train, y_train, X_val, y_val, X_test, y_test
