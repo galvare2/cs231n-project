@@ -16,16 +16,19 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(model='mlp', num_epochs=100, batch_size=100, learning_rate=1e-3):
+def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
     net = vgg16.build_model(input_var, batch_size)
     network = net['prob']
     # Load the dataset
-    print("Loading data...")
-    X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
-    print (X_val.shape)
+    if unseen:
+        print("Loading data, unseen val/test signatories task...")
+        X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data_unseen_test()
+    else:
+        print("Loading data, standard task...")
+        X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
     # Create a loss expression for training, i.e., a scalar objective we want
     # to minimize (for our multi-class problem, it is the cross-entropy loss):
     prediction = lasagne.layers.get_output(network)
@@ -120,14 +123,8 @@ def train_net(model='mlp', num_epochs=100, batch_size=100, learning_rate=1e-3):
     # lasagne.layers.set_all_param_values(network, param_values)
 
 if __name__ == "__main__":  
-    if len(sys.argv)>1 and sys.argv[1]=='test':
-        print("Test Run")
-        for i in [3e-3,1e-3,3e-4,1e-4,3e-5,1e-5,3e-6,1e-6,3e-7,1e-7]:
-            print('#############################################')
-            print('\t LR =', i)
-            print('#############################################')
-            train_net(learning_rate=i)
-            print('\n\n\n\n\n')
+    if len(sys.argv)>1 and sys.argv[1]=='unseen':
+        train_net()
     else:
-        train_net(learning_rate=1e-4)
+        train_net()
 
