@@ -38,10 +38,9 @@ def load_data_unseen_separated():
 			add_image(X_train, y_train, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory))
 	for directory in listdir(directories['questioned_test']):
 		if directory.startswith('.'): continue
-		if int(directory) < UNSEEN_TEST_CUTOFF:
 		for filename in listdir(os.path.join(directories['questioned_test'], directory)):
 			add_image(X_train, y_train, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory))
-	#X_all = np.expand_dims(np.stack(X_all, axis=0), axis=1).astype('float32')
+	
 	X_train = np.stack(X_train, axis=0).astype('float32')
 	y_train = np.stack(y_train, axis=0).astype('int32')
 	X_val_test = np.stack(X_val_test, axis=0).astype('float32')
