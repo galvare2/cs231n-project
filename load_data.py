@@ -12,7 +12,7 @@ VAL_DATA_RATIO = .1
 IMAGE_HEIGHT = 224
 IMAGE_WIDTH = IMAGE_HEIGHT
 
-UNSEEN_TEST_CUTOFF = 45
+UNSEEN_TEST_CUTOFF = 52
 
 
 directories = {
@@ -98,7 +98,7 @@ def load_data():
 	X_all = np.stack(X_all, axis=0).astype('float32')
 	y_all = np.stack(y_all, axis=0).astype('int32')
 	
-    np.random.seed(5)
+        np.random.seed(5)
 	p = np.random.permutation(len(y_all))
 	X_all = X_all[p, :, :, :]
 	y_all = y_all[p]
@@ -106,9 +106,9 @@ def load_data():
 	train_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
 	val_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO))
 	
-    X_train = X_all[:train_cutoff]
+        X_train = X_all[:train_cutoff]
 	y_train = y_all[:train_cutoff]
-    X_val = X_all[train_cutoff:val_cutoff]
+        X_val = X_all[train_cutoff:val_cutoff]
 	y_val = y_all[train_cutoff:val_cutoff]
 	X_test = X_all[val_cutoff:]
 	y_test = y_all[val_cutoff:]

@@ -8,7 +8,10 @@ import pickle
 REG = 0.002
 LAST_FIXED_LAYER = 'pool5'
 
-# Best: REG = 0.2, LAST_FIXED = pool5
+# Best: REG = 0.002, LAST_FIXED = pool5, DROPOUT = 0.5
+
+# Best for unseen: REG = 0.004, LAST_FIXED = pool5,
+# DROPOUT = 0.2 (in vgg16.py)
 
 def iterate_minibatches(inputs, targets, batchsize):
     assert len(inputs) == len(targets)

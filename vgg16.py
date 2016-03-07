@@ -15,6 +15,8 @@ from lasagne.layers.dnn import Conv2DDNNLayer as ConvLayer
 from lasagne.nonlinearities import softmax
 import pickle
 
+DROPOUT = 0.5
+
 def build_model(input_var, BATCH_SIZE=None):
     pretrained_weights = pickle.load(open( "vgg16.pkl", "rb" ) )
     w = pretrained_weights['param values']
@@ -67,10 +69,10 @@ def build_model(input_var, BATCH_SIZE=None):
     net['pool5'] = PoolLayer(net['conv5_3'], 2)
     net['fc6'] = DenseLayer(net['pool5'], num_units=4096,
             W = w[26], b = w[27])
-    net['fc6_dropout'] = DropoutLayer(net['fc6'], p=0.5)
+    net['fc6_dropout'] = DropoutLayer(net['fc6'], p=DROPOUT)
     net['fc7'] = DenseLayer(net['fc6_dropout'], num_units=4096,
             W = w[28], b = w[29])
-    net['fc7_dropout'] = DropoutLayer(net['fc7'], p=0.5)
+    net['fc7_dropout'] = DropoutLayer(net['fc7'], p=DROPOUT)
     net['fc8'] = DenseLayer(
             net['fc7_dropout'], num_units=2, nonlinearity=None)
     net['prob'] = NonlinearityLayer(net['fc8'], softmax)
