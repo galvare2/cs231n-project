@@ -71,7 +71,7 @@ def load_data_unseen_test():
 	X_val = X_val_test[:cutoff]
 	y_val = y_val_test[:cutoff]
 	X_test = X_val_test[cutoff:]
-	y_val = y_val_test[cutoff:]
+	y_test = y_val_test[cutoff:]
 
 	print ("X train shape:", X_train.shape)
 	print ("y val shape:", y_val.shape)
