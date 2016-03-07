@@ -14,8 +14,8 @@ VAL_DATA_RATIO = .1
 IMAGE_HEIGHT = 224
 IMAGE_WIDTH = IMAGE_HEIGHT
 
-UNSEEN_TEST_CUTOFF = 52
-UNSEEN_FORGER_TEST_CUTOFF = 150
+UNSEEN_TEST_CUTOFF = 0
+UNSEEN_FORGER_TEST_CUTOFF = 0
 
 
 directories = {
@@ -45,7 +45,7 @@ def load_data_unseen_test():
 			y_curr = y_val_test
 			held_out = True
 		for filename in listdir(os.path.join(directories['genuine_test_ref'], directory)):
-			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory, held_out))
+			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory), held_out)
 	for directory in listdir(directories['questioned_test']):
 		if directory.startswith('.'): continue
 		if int(directory) < UNSEEN_TEST_CUTOFF:
@@ -57,7 +57,7 @@ def load_data_unseen_test():
 			y_curr = y_val_test
 			held_out = True
 		for filename in listdir(os.path.join(directories['questioned_test'], directory)):
-			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory, held_out))
+			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory), held_out)
 	#X_all = np.expand_dims(np.stack(X_all, axis=0), axis=1).astype('float32')
 	X_train = np.stack(X_train, axis=0).astype('float32')
 	y_train = np.stack(y_train, axis=0).astype('int32')
@@ -83,6 +83,45 @@ def load_data_unseen_test():
 	print ("X train shape:", X_train.shape)
 	print ("y val shape:", y_val.shape)
 	print ("y test shape:", y_test.shape)
+        print ("y train class skew:", np.bincount(y_train))
+        print ("y test class skew:", np.bincount(y_test))
+
+        return X_train, y_train, X_val, y_val, X_test, y_test
+
+def load_data():
+	X_all = []
+	y_all = []
+	for filename in listdir(directories['genuine_train']):
+		add_image(X_all, y_all, GENUINE, filename, directories['genuine_train'])
+	for filename in listdir(directories['forge_train']):
+		add_image(X_all, y_all, FORGERY, filename, directories['forge_train'])
+	for directory in listdir(directories['genuine_test_ref']):
+		if directory.startswith('.'): continue
+		for filename in listdir(os.path.join(directories['genuine_test_ref'], directory)):
+			add_image(X_all, y_all, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory))
+	for directory in listdir(directories['questioned_test']):
+		if directory.startswith('.'): continue
+		for filename in listdir(os.path.join(directories['questioned_test'], directory)):
+			add_image(X_all, y_all, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory))
+	#X_all = np.expand_dims(np.stack(X_all, axis=0), axis=1).astype('float32')
+	X_all = np.stack(X_all, axis=0).astype('float32')
+	y_all = np.stack(y_all, axis=0).astype('int32')
+	
+        np.random.seed(5)
+	p = np.random.permutation(len(y_all))
+	X_all = X_all[p, :, :, :]
+	y_all = y_all[p]
+	# Apply cutoffs to separate out the data
+	train_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
+	val_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO))
+	
+        X_train = X_all[:train_cutoff]
+	y_train = y_all[:train_cutoff]
+        X_val = X_all[train_cutoff:val_cutoff]
+	y_val = y_all[train_cutoff:val_cutoff]
+	X_test = X_all[val_cutoff:]
+	y_test = y_all[val_cutoff:]
+	return X_train, y_train, X_val, y_val, X_test, y_test
 
 	return X_train, y_train, X_val, y_val, X_test, y_test
 
@@ -118,11 +157,16 @@ def load_data():
 	y_val = y_all[train_cutoff:val_cutoff]
 	X_test = X_all[val_cutoff:]
 	y_test = y_all[val_cutoff:]
+
+        print ("y train class skew:", np.bincount(y_train))
+        print ("y test class skew:", np.bincount(y_test))
+
 	return X_train, y_train, X_val, y_val, X_test, y_test
 
 def get_forger_id(filename):
-	if len(filename != FORGED_FILENAME_LENGTH): return -1
-	f_id = filename[3:7]
+	if len(filename) != FORGED_FILENAME_LENGTH: return -1
+        if filename[2] != '_': return -1
+        f_id = filename[3:7]
 	return int(f_id)
 
 def add_image_unseen(X, y, label, filename, directory, held_out=False):
@@ -132,8 +176,8 @@ def add_image_unseen(X, y, label, filename, directory, held_out=False):
 	print (filename, f_id)
 	if held_out and f_id > -1 and f_id < UNSEEN_FORGER_TEST_CUTOFF:
 		return
-    if not held_out and get_forger_id(filename) > UNSEEN_FORGER_TEST_CUTOFF:
-    	return
+        if not held_out and get_forger_id(filename) > UNSEEN_FORGER_TEST_CUTOFF:
+    	    return
 
 	img = ndimage.imread(os.path.join(directory, filename), flatten = False)
 	img = np.transpose(img, (2,0,1))
