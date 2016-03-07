@@ -124,7 +124,7 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
 
 if __name__ == "__main__":  
     if len(sys.argv)>1 and sys.argv[1]=='unseen':
-        train_net()
+        train_net(unseen=True)
     else:
         train_net()
 
