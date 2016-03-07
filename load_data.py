@@ -7,12 +7,15 @@ GENUINE = 1
 FORGERY = 0
 QUESTIONED = -1
 GENUINE_FILENAME_LENGTH = 10
+FORGED_FILENAME_LENGTH = 14
+FORGED_FILENAME_TRAIN_SET_LENGTH = 13
 TEST_DATA_RATIO = .1
 VAL_DATA_RATIO = .1
 IMAGE_HEIGHT = 224
 IMAGE_WIDTH = IMAGE_HEIGHT
 
 UNSEEN_TEST_CUTOFF = 52
+UNSEEN_FORGER_TEST_CUTOFF = 150
 
 
 directories = {
@@ -28,29 +31,33 @@ def load_data_unseen_test():
 	X_val_test = []
 	y_val_test = []
 	for filename in listdir(directories['genuine_train']):
-		add_image(X_train, y_train, GENUINE, filename, directories['genuine_train'])
+		add_image_unseen(X_train, y_train, GENUINE, filename, directories['genuine_train'])
 	for filename in listdir(directories['forge_train']):
-		add_image(X_train, y_train, FORGERY, filename, directories['forge_train'])
+		add_image_unseen(X_train, y_train, FORGERY, filename, directories['forge_train'])
 	for directory in listdir(directories['genuine_test_ref']):
 		if directory.startswith('.'): continue
 		if int(directory) < UNSEEN_TEST_CUTOFF:
 			X_curr = X_train
 			y_curr = y_train
+			held_out = False
 		else:
 			X_curr = X_val_test
 			y_curr = y_val_test
+			held_out = True
 		for filename in listdir(os.path.join(directories['genuine_test_ref'], directory)):
-			add_image(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory))
+			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['genuine_test_ref'], directory, held_out))
 	for directory in listdir(directories['questioned_test']):
 		if directory.startswith('.'): continue
 		if int(directory) < UNSEEN_TEST_CUTOFF:
 			X_curr = X_train
 			y_curr = y_train
+			held_out = False
 		else:
 			X_curr = X_val_test
 			y_curr = y_val_test
+			held_out = True
 		for filename in listdir(os.path.join(directories['questioned_test'], directory)):
-			add_image(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory))
+			add_image_unseen(X_curr, y_curr, QUESTIONED, filename, os.path.join(directories['questioned_test'], directory, held_out))
 	#X_all = np.expand_dims(np.stack(X_all, axis=0), axis=1).astype('float32')
 	X_train = np.stack(X_train, axis=0).astype('float32')
 	y_train = np.stack(y_train, axis=0).astype('int32')
@@ -98,41 +105,69 @@ def load_data():
 	X_all = np.stack(X_all, axis=0).astype('float32')
 	y_all = np.stack(y_all, axis=0).astype('int32')
 	
-        np.random.seed(5)
+ 	np.random.seed(5)
 	p = np.random.permutation(len(y_all))
 	X_all = X_all[p, :, :, :]
 	y_all = y_all[p]
 	# Apply cutoffs to separate out the data
 	train_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
 	val_cutoff = int(len(X_all) * (1 - TEST_DATA_RATIO))
-	
-        X_train = X_all[:train_cutoff]
+	X_train = X_all[:train_cutoff]
 	y_train = y_all[:train_cutoff]
-        X_val = X_all[train_cutoff:val_cutoff]
+	X_val = X_all[train_cutoff:val_cutoff]
 	y_val = y_all[train_cutoff:val_cutoff]
 	X_test = X_all[val_cutoff:]
 	y_test = y_all[val_cutoff:]
 	return X_train, y_train, X_val, y_val, X_test, y_test
 
+def get_forger_id(filename):
+	if len(filename != FORGED_FILENAME_LENGTH): return -1
+	f_id = filename[3:7]
+	return int(f_id)
 
-def add_image(X_all, y_all, label, filename, directory):
+def add_image_unseen(X, y, label, filename, directory, held_out=False):
+	if filename.startswith('.'):
+		return
+	f_id = get_forger_id(filename)
+	print (filename, f_id)
+	if held_out and f_id > -1 and f_id < UNSEEN_FORGER_TEST_CUTOFF:
+		return
+    if not held_out and get_forger_id(filename) > UNSEEN_FORGER_TEST_CUTOFF:
+    	return
+
+	img = ndimage.imread(os.path.join(directory, filename), flatten = False)
+	img = np.transpose(img, (2,0,1))
+	img2 = np.zeros((3,IMAGE_HEIGHT, IMAGE_WIDTH))
+	for i in range(img.shape[0]):
+		im_i = misc.imresize(img[i], (IMAGE_HEIGHT, IMAGE_WIDTH), interp='nearest')
+		img2[i] = im_i
+	X.append(img2)
+	if label is QUESTIONED:
+		if len(filename) == GENUINE_FILENAME_LENGTH:
+			y.append(GENUINE)
+		else:
+			y.append(FORGERY)
+	else:
+		y.append(label)
+
+def add_image(X, y, label, filename, directory):
 	if filename.startswith('.'):
 		return
 	#img = ndimage.imread(os.path.join(directory, filename), flatten = True)
 	img = ndimage.imread(os.path.join(directory, filename), flatten = False)
-        img = np.transpose(img, (2,0,1))
-        img2 = np.zeros((3,IMAGE_HEIGHT, IMAGE_WIDTH))
-        for i in range(img.shape[0]):
-	    im_i = misc.imresize(img[i], (IMAGE_HEIGHT, IMAGE_WIDTH), interp='nearest')
-            img2[i] = im_i
-	X_all.append(img2)
+ 	img = np.transpose(img, (2,0,1))
+	img2 = np.zeros((3,IMAGE_HEIGHT, IMAGE_WIDTH))
+	for i in range(img.shape[0]):
+		im_i = misc.imresize(img[i], (IMAGE_HEIGHT, IMAGE_WIDTH), interp='nearest')
+    	img2[i] = im_i
+	X.append(img2)
 	if label is QUESTIONED:
 		if len(filename) == GENUINE_FILENAME_LENGTH:
-			y_all.append(GENUINE)
+			y.append(GENUINE)
 		else:
-			y_all.append(FORGERY)
+			y.append(FORGERY)
 	else:
-		y_all.append(label)
+		y.append(label)
 
 def main():
 	X_train, y_train, X_val, y_val, X_test, y_test = load_data()
