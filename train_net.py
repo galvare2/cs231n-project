@@ -108,8 +108,8 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
             err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
             val_err += err
             val_acc += acc
-            val_frr += f_n / (t_p + f_n)
-            val_far += f_p / (f_p + t_n)
+            val_frr += float(f_n) / (t_p + f_n)
+            val_far += float(f_p) / (f_p + t_n)
             val_batches += 1
 
         # Then we print the results for this epoch:
@@ -135,8 +135,8 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
         err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
         test_err += err
         test_acc += acc
-        test_frr += f_n / (t_p + f_n)
-        test_far += f_p / (f_p + t_n)
+        test_frr += float(f_n) / (t_p + f_n)
+        test_far += float(f_p) / (f_p + t_n)
         test_batches += 1
     print("Final results:")
     print("  test loss: withheld until final submission lolol")
