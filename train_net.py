@@ -22,7 +22,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=2, batch_size=50, learning_rate=1e-4, unseen=False):
+def train_net(num_epochs=1, batch_size=50, learning_rate=1e-4, unseen=False):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -131,7 +131,8 @@ def train_net(num_epochs=2, batch_size=50, learning_rate=1e-4, unseen=False):
         val_loss_per_epoch.append(val_err / val_batches)
         train_loss_per_epoch.append(train_err / train_batches)
 
-    plot_loss(val_loss_per_epoch, train_loss_per_epoch)
+    print("Val loss per epoch:", val_loss_per_epoch)
+    print("Train loss per epoch:", train_loss_per_epoch)
     # After training, we compute and print the test error:
     test_err = 0
     test_acc = 0
@@ -157,15 +158,6 @@ def train_net(num_epochs=2, batch_size=50, learning_rate=1e-4, unseen=False):
     # with np.load('model.npz') as f:
     #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     # lasagne.layers.set_all_param_values(network, param_values)
-
-def plot_loss(val, train):
-    plt.plot(range(len(val)), val, label='Validation Loss')
-    plt.plot(range(len(train)), train, label='Training Loss')
-    plt.title('Loss Per Epoch')
-    plt.xlabel('Epoch')
-    plt.ylabel('Regularized loss')
-    plt.legend()
-    plt.savefig('loss_per_epoch.png', bbox_inches='tight')
 
 if __name__ == "__main__":  
     if len(sys.argv)>1 and sys.argv[1]=='unseen':
