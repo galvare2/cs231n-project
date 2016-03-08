@@ -19,19 +19,28 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
-    # Prepare Theano variables for inputs and targets
-    input_var = T.tensor4('inputs')
-    target_var = T.ivector('targets')
-    net = vgg16.build_model(input_var, batch_size)
-    network = net['prob']
+def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False, train_without_forge=True):
+    
     # Load the dataset
-    if unseen:
-        print("Loading data, unseen val/test signatories task...")
+    if train_without_forge:
+        print("Loading data, train without forgeries task...")
+        X_train, y_train, X_val, y_val, X_test, y_test, val_cutoff_gen, test_cutoff_gen = load_data.load_data_train_without_forge()
+    else if unseen:
+        print("Loading data, unseen val/test signatures task...")
         X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data_unseen_test()
     else:
         print("Loading data, standard task...")
         X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
+
+    # Prepare Theano variables for inputs and targets
+    input_var = T.tensor4('inputs')
+    target_var = T.ivector('targets')
+    if train_without_forge:
+        num_ids = np.unique(np.concatenate((y_train, y_val, y_test))).shape[0]
+        net = vgg16.build_model(input_var, batch_size, num_classes = num_ids)
+    else:
+    net = vgg16.build_model(input_var, batch_size)
+    network = net['prob']
     # Create a loss expression for training, i.e., a scalar objective we want
     # to minimize (for our multi-class problem, it is the cross-entropy loss):
     prediction = lasagne.layers.get_output(network)
@@ -55,6 +64,7 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
     # here is that we do a deterministic forward pass through the network,
     # disabling dropout layers.
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
+    correct_id_score = test_prediction[target_var]
     test_loss = lasagne.objectives.categorical_crossentropy(test_prediction,
                                                             target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2) 
     test_loss = test_loss.mean()
@@ -68,7 +78,7 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
     print("train_fn set up.")
 
     # Compile a second function computing the validation loss and accuracy:
-    val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
+    val_fn = theano.function([input_var, target_var], [test_loss, test_acc, correct_id_score])
 
     # Finally, launch the training loop.
     print("Starting training...")
@@ -85,22 +95,60 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
             train_batches += 1
 
         # And a full pass over the validation data:
-        val_err = 0
-        val_acc = 0
-        val_batches = 0
-        for batch in iterate_minibatches(X_val, y_val, batch_size):
-            inputs, targets = batch
-            err, acc = val_fn(inputs, targets)
-            val_err += err
-            val_acc += acc
-            val_batches += 1
 
+        if train_without_forge:
+            gen_val_err = 0
+            gen_val_acc = 0
+            gen_val_batches = 0
+            gen_correct_id_score = []
+            for batch in iterate_minibatches(X_val[:val_cutoff_gen], y_val[:val_cutoff_gen], batch_size):
+                inputs, targets = batch
+                err, acc, gen_correct_id_score = val_fn(inputs, targets)
+                gen_correct_id_scores.append(gen_correct_id_score)
+                gen_val_err += err
+                gen_val_acc += acc
+                gen_val_batches += 1
+            forge_val_err = 0
+            forge_val_acc = 0
+            forge_val_batches = 0
+            forge_correct_id_scores = []
+            for batch in iterate_minibatches(X_val[val_cutoff_gen:], y_val[val_cutoff_gen:], batch_size):
+                inputs, targets = batch
+                err, acc, forge_correct_id_score = val_fn(inputs, targets)
+                forge_correct_id_scores.append(forge_correct_id_score)
+                forge_val_err += err
+                forge_val_acc += acc
+                forge_val_batches += 1
+        else:
+            val_err = 0
+            val_acc = 0
+            val_batches = 0
+            for batch in iterate_minibatches(X_val, y_val, batch_size):
+                inputs, targets = batch
+                err, acc, correct_id_score = val_fn(inputs, targets)
+                val_err += err
+                val_acc += acc
+                val_batches += 1
         # Then we print the results for this epoch:
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, num_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-        print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
-        print("  validation accuracy:\t\t{:.2f} %".format(
+
+        if train_without_forge:
+            print("  genuine validation loss:\t\t{:.6f}".format(gen_val_err / gen_val_batches))
+            print("  genuine validation accuracy:\t\t{:.2f} %".format(
+            gen_val_acc / gen_val_batches * 100))
+
+
+            print("  forged validation loss:\t\t{:.6f}".format(forge_val_err / forge_val_batches))
+            print("  forged accuracy:\t\t{:.2f} %".format(
+            forge_val_acc / forge_val_batches * 100))
+
+            print "gen_correct_id_scores: ", gen_correct_id_scores
+            print "forge_correct_id_scores: ", forge_correct_id_scores
+        else:
+            print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
+            print("  validation accuracy:\t\t{:.2f} %".format(
             val_acc / val_batches * 100))
 
     # After training, we compute and print the test error:

@@ -36,7 +36,7 @@ def load_data_train_without_forge():
 		add_image(IDENTIFICATION, X_gen, y_gen, id_num, filename, directories['genuine_train'])
 	#all of these need to just go in test
 	for filename in listdir(directories['forge_train']):
-		id_num = -int(filename[4:7])
+		id_num = int(filename[4:7])
 		add_image(IDENTIFICATION, X_forge, y_forge, id_num, filename, directories['forge_train'])
 	for directory in listdir(directories['genuine_test_ref']):
 		if directory.startswith('.'): continue
@@ -50,7 +50,7 @@ def load_data_train_without_forge():
 			if len(filename) == GENUINE_FILENAME_LENGTH:
 				add_image(IDENTIFICATION, X_gen, y_gen, id_num, filename, os.path.join(directories['questioned_test'], directory))
 			else:
-				add_image(IDENTIFICATION, X_forge, y_forge, -id_num, filename, os.path.join(directories['questioned_test'], directory))
+				add_image(IDENTIFICATION, X_forge, y_forge, id_num, filename, os.path.join(directories['questioned_test'], directory))
 
 	X_gen = np.stack(X_gen, axis=0).astype('float32')
 	print "X_gen.shape", X_gen.shape
@@ -73,18 +73,20 @@ def load_data_train_without_forge():
 	val_cutoff_forge = int(len(X_forge) * (1 - TEST_DATA_RATIO))
 
 	X_train = X_gen[:train_cutoff_gen]
-	print "X_train.shape", X_train.shape
 	y_train = y_gen[:train_cutoff_gen]
-	print "y_train.shape", y_train.shape
 	X_val = np.concatenate((X_gen[train_cutoff_gen:val_cutoff_gen], X_forge[train_cutoff_forge:val_cutoff_forge]))
-	print "X_val.shape", X_val.shape
 	y_val = np.concatenate((y_gen[train_cutoff_gen:val_cutoff_gen], y_forge[train_cutoff_forge:val_cutoff_forge]))
-	print "y_val.shape", y_val.shape
 	X_test = np.concatenate((X_gen[val_cutoff_gen:], X_forge[val_cutoff_forge:]))
-	print "X_test.shape", X_test.shape
 	y_test = np.concatenate((y_gen[val_cutoff_gen:], y_forge[val_cutoff_forge:]))
+	test_cutoff_gen = y_gen[val_cutoff_gen:].shape[0]
+	print "X_train.shape", X_train.shape
+	print "y_train.shape", y_train.shape
+	print "X_val.shape", X_val.shape
+	print "y_val.shape", y_val.shape
+	print "X_test.shape", X_test.shape
 	print "y_test.shape", y_test.shape
-	return X_train, y_train, X_val, y_val, X_test, y_test
+	print "test_cutoff_gen: ", test_cutoff_gen
+	return X_train, y_train, X_val, y_val, X_test, y_test, val_cutoff_gen, test_cutoff_gen
 
 
 def load_data_unseen_test():
@@ -202,7 +204,7 @@ def add_image(task, X_all, y_all, label, filename, directory):
 		y_all.append(label)
 
 def main():
-	X_train, y_train, X_val, y_val, X_test, y_test = load_data_train_without_forge()
+	X_train, y_train, X_val, y_val, X_test, y_test, val_cutoff_gen, test_cutoff_gen = load_data_train_without_forge()
 
 if __name__ == '__main__':
 	main()
