@@ -21,7 +21,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
+def train_net(num_epochs=2, batch_size=50, learning_rate=1e-4, unseen=False):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -88,6 +88,7 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     print("Starting training...")
     # We iterate over epochs:
     val_loss_per_epoch = []
+    train_loss_per_epoch = []
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
         train_err = 0
