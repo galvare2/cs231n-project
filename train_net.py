@@ -164,7 +164,7 @@ def plot_loss(val, train):
     plt.xlabel('Epoch')
     plt.ylabel('Regularized loss')
     plt.legend()
-    plt.show()
+    plt.savefig('loss_per_epoch.png', bbox_inches='tight')
 
 if __name__ == "__main__":  
     if len(sys.argv)>1 and sys.argv[1]=='unseen':
