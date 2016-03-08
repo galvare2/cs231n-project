@@ -5,6 +5,7 @@ import numpy as np
 import theano.tensor as T
 import pickle
 import matplotlib.pyplot as plt
+import matplotlib
 
 REG = 0.002
 LAST_FIXED_LAYER = 'pool5'
