@@ -5,8 +5,9 @@ import numpy as np
 import theano.tensor as T
 import pickle
 
-REG = 0.002
+REG = 0.003
 LAST_FIXED_LAYER = 'pool5'
+L_R = 1e-4
 
 # Best: REG = 0.002, LAST_FIXED = pool5, DROPOUT = 0.5
 
@@ -19,7 +20,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
+def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -28,7 +29,7 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
     # Load the dataset
     if unseen:
         print("Loading data, unseen val/test signatories task...")
-        X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data_unseen_test()
+        X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data_unseen_separated()
     else:
         print("Loading data, standard task...")
         X_train, y_train, X_val, y_val, X_test, y_test = load_data.load_data()
@@ -50,7 +51,8 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
     # First get all the parameters
     updates = lasagne.updates.nesterov_momentum(
             loss, params, learning_rate=learning_rate, momentum=0.9)
-
+    #updates = lasagne.updates.adam(
+     #       loss, params, learning_rate=learning_rate) 
     # Create a loss expression for validation/testing. The crucial difference
     # here is that we do a deterministic forward pass through the network,
     # disabling dropout layers.
@@ -127,7 +129,7 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False):
 
 if __name__ == "__main__":  
     if len(sys.argv)>1 and sys.argv[1]=='unseen':
-        train_net(unseen=True)
+        train_net(unseen=True, learning_rate=L_R)
     else:
-        train_net()
+        train_net(learning_rate=L_R)
 
