@@ -5,7 +5,7 @@ import numpy as np
 import theano.tensor as T
 import pickle
 
-REG = 0.003
+REG = 0.002
 LAST_FIXED_LAYER = 'pool5'
 L_R = 1e-4
 
