@@ -19,7 +19,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False, train_without_forge=True):
+def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False, train_without_forge=False):
     
     # Load the dataset
     if train_without_forge:
@@ -174,8 +174,11 @@ def train_net(num_epochs=10, batch_size=100, learning_rate=1e-4, unseen=False, t
     # lasagne.layers.set_all_param_values(network, param_values)
 
 if __name__ == "__main__":  
-    if len(sys.argv)>1 and sys.argv[1]=='unseen':
-        train_net(unseen=True)
+    if len(sys.argv)>1:
+        if sys.argv[1]=='unseen':
+            train_net(unseen=True)
+        else if sys.argv[1]=='train_without_forge':
+            train_net(train_without_forge=True)
     else:
         train_net()
 
