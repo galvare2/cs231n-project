@@ -100,6 +100,8 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
         # And a full pass over the validation data:
         val_err = 0
         val_acc = 0
+        val_far = 0
+        val_frr = 0
         val_batches = 0
         for batch in iterate_minibatches(X_val, y_val, batch_size):
             inputs, targets = batch
@@ -125,6 +127,8 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     # After training, we compute and print the test error:
     test_err = 0
     test_acc = 0
+    test_far = 0
+    test_frr = 0
     test_batches = 0
     for batch in iterate_minibatches(X_test, y_test, batch_size):
         inputs, targets = batch
