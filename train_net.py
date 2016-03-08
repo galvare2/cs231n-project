@@ -66,7 +66,7 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
 
     # Hacky code to create the confusion matrix, which exists due to my
     # poor understanding of theano
-    preds = T.eq(T.argmax(test_prediction, axis=1))
+    preds = T.argmax(test_prediction, axis=1)
     inv_preds = 1 - preds
     inv_target_var = 1 - target_var
     true_positives = T.sum(preds * target_var) # Use mult as elementwise and
