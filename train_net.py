@@ -4,6 +4,7 @@ import lasagne
 import numpy as np
 import theano.tensor as T
 import pickle
+import matplotlib.pyplot as plt
 
 REG = 0.002
 LAST_FIXED_LAYER = 'pool5'
@@ -86,6 +87,7 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     # Finally, launch the training loop.
     print("Starting training...")
     # We iterate over epochs:
+    val_loss_per_epoch = []
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
         train_err = 0
@@ -124,6 +126,10 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
         print("  validation frr:\t\t{:.2f} %".format(
             val_frr / val_batches * 100))
 
+        val_loss_per_epoch.append(val_err / val_batches)
+        train_loss_per_epoch.append(train_err / train_batches)
+
+    plot_loss(val_loss_per_epoch, train_loss_per_epoch)
     # After training, we compute and print the test error:
     test_err = 0
     test_acc = 0
@@ -149,6 +155,15 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     # with np.load('model.npz') as f:
     #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     # lasagne.layers.set_all_param_values(network, param_values)
+
+def plot_loss(val, train):
+    plt.plot(range(len(val)), val, label='Validation Loss')
+    plt.plot(range(len(train)), train, label='Training Loss')
+    plt.title('Loss Per Epoch')
+    plt.xlabel('Epoch')
+    plt.ylabel('Regularized loss')
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":  
     if len(sys.argv)>1 and sys.argv[1]=='unseen':
