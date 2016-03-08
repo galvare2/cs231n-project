@@ -64,13 +64,24 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
                       dtype=theano.config.floatX)
 
+    # Hacky code to create the confusion matrix, which exists due to my
+    # poor understanding of theano
+    preds = T.eq(T.argmax(test_prediction, axis=1))
+    inv_preds = 1 - preds
+    inv_target_var = 1 - target_var
+    true_positives = T.sum(preds * target_var) # Use mult as elementwise and
+    true_negatives = T.sum(inv_preds * inv_target_var)
+    false_positives = T.sum(preds * inv_target_var)
+    false_negatives = T.sum(inv_preds * target_var)
+
     # Compile a function performing a training step on a mini-batch (by giving
     # the updates dictionary) and returning the corresponding training loss:
     train_fn = theano.function([input_var, target_var], loss, updates=updates)
     print("train_fn set up.")
 
     # Compile a second function computing the validation loss and accuracy:
-    val_fn = theano.function([input_var, target_var], [test_loss, test_acc])
+    val_fn = theano.function([input_var, target_var],
+        [test_loss, test_acc, true_positives, true_negatives, false_positives, false_negatives])
 
     # Finally, launch the training loop.
     print("Starting training...")
@@ -92,9 +103,11 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
         val_batches = 0
         for batch in iterate_minibatches(X_val, y_val, batch_size):
             inputs, targets = batch
-            err, acc = val_fn(inputs, targets)
+            err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
             val_err += err
             val_acc += acc
+            val_frr += f_n / (t_p + f_n)
+            val_far += f_p / (f_p + t_n)
             val_batches += 1
 
         # Then we print the results for this epoch:
@@ -104,6 +117,10 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
         print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
         print("  validation accuracy:\t\t{:.2f} %".format(
             val_acc / val_batches * 100))
+        print("  validation far:\t\t{:.2f} %".format(
+            val_far / val_batches * 100))
+        print("  validation frr:\t\t{:.2f} %".format(
+            val_frr / val_batches * 100))
 
     # After training, we compute and print the test error:
     test_err = 0
@@ -111,9 +128,11 @@ def train_net(num_epochs=10, batch_size=50, learning_rate=1e-4, unseen=False):
     test_batches = 0
     for batch in iterate_minibatches(X_test, y_test, batch_size):
         inputs, targets = batch
-        err, acc = val_fn(inputs, targets)
+        err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
         test_err += err
         test_acc += acc
+        test_frr += f_n / (t_p + f_n)
+        test_far += f_p / (f_p + t_n)
         test_batches += 1
     print("Final results:")
     print("  test loss: withheld until final submission lolol")
