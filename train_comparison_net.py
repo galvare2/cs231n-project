@@ -1,5 +1,5 @@
 from __future__ import print_function
-import load_data, sys, os, time, theano, vgg16
+import load_data, sys, os, time, theano, vgg16_2channel
 import lasagne
 import numpy as np
 import theano.tensor as T
@@ -22,11 +22,11 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
+def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
-    net = vgg16.build_model(input_var, batch_size)
+    net = vgg16_2channel.build_model(input_var, batch_size)
     network = net['prob']
     # Load the dataset
     print("Not pickling...")
@@ -100,6 +100,7 @@ def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
+            if train_batches > 2: break
         # And a full pass over the validation data:
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
 

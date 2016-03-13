@@ -142,16 +142,18 @@ def make_comparison_training_set(train_id_dict):
 			for gen2 in gen_list:
 				add_comparison_image(gen, gen2, X_train, y_train, SIMILAR)
                 print id_num, " done"                 
-	return X_train, y_train
+                if id_num == 6:
+                    break
+        return X_train, y_train
 
 
 def add_comparison_image(top, bottom, X, y, label):
 	top_img = ndimage.imread(top, flatten = False)
 	bottom_img = ndimage.imread(bottom, flatten = False)
-	top_img = misc.imresize(top_img, (IMAGE_HEIGHT/2, IMAGE_WIDTH), interp='nearest')
-	bottom_img = misc.imresize(bottom_img, (IMAGE_HEIGHT/2, IMAGE_WIDTH), interp='nearest')
-	img = np.vstack((top_img, bottom_img))
-	img2 = np.transpose(img, (2,0,1))
+	top_img = misc.imresize(top_img, (IMAGE_HEIGHT, IMAGE_WIDTH), interp='nearest')
+	bottom_img = misc.imresize(bottom_img, (IMAGE_HEIGHT, IMAGE_WIDTH), interp='nearest')
+	img = np.concatenate((top_img, bottom_img), axis=2)
+        img2 = np.transpose(img, (2,0,1))
 	X.append(img2)
 	y.append(label)
 
