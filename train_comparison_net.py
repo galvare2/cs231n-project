@@ -86,7 +86,7 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     # Finally, launch the training loop.
     print("Starting training...")
     # We iterate over epochs:
-    val_loss_per_epoch = []
+    val_acc_per_epoch = []
     train_loss_per_epoch = []
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
@@ -102,72 +102,72 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
             train_batches += 1
             if train_batches > 2: break
         # And a full pass over the validation data:
+        (val_fp, val_fn, val_tp, val_tn) = (0, 0, 0, 0,)
+        discard = 0
+        for id_num in questioned_dict_val:
+            discard += 1
+            if discard % 2 == 0: continue
+            print ("Validating for id number: ", id_num)
+            questioned_gen_val = questioned_dict_val[id_num]['genuine']
+            questioned_forged_val = questioned_dict_val[id_num]['forged']
+            references = ref_dict[id_num]
+            for questioned_image in questioned_gen_val:
+                #print ("Predictions for genuine image: ", questioned_image)
+                X_val = []
+                y_val = []
+                for ref in references:
+                    load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.SIMILAR)
+                X_val = np.stack(X_val, axis=0).astype('float32')
+                y_val = np.stack(y_val, axis=0).astype('int32')
+                predictions = val_fn_comparison(X_val)
+                predictions = predictions[0]
+                print(predictions)
+                counts = np.bincount(predictions)
+                majority = np.argmax(counts)
+                if majority == load_data.SIMILAR:
+                    val_tp += 1
+                else:
+                    val_fn += 1
+            for questioned_image in questioned_forged_val:
+                #print ("Predictions for forged image: ", questioned_image)
+                X_val = []
+                y_val = []
+                for ref in references:
+                    load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.DISSIMILAR)
+                X_val = np.stack(X_val, axis=0).astype('float32')
+                y_val = np.stack(y_val, axis=0).astype('int32')
+                predictions = val_fn_comparison(X_val)
+                predictions = predictions[0]
+                print (predictions)
+                counts = np.bincount(predictions)
+                majority = np.argmax(counts)
+                if majority == load_data.DISSIMILAR:
+                    val_tn += 1
+                else:
+                    val_fp += 1
+        total = val_fp + val_tn + val_fn + val_tp
+        val_frr = float(val_fn) / (val_tp + val_fn)
+        val_far = float(val_fp) / (val_fp + val_tn)
+        val_acc = float(val_tp + val_tn) / total
+
+        print("Epoch {} of {} took {:.3f}s".format(
+            epoch + 1, num_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
+        print("  validation accuracy:\t\t{:.2f} %".format(
+            val_acc * 100))
+        print("  validation far:\t\t{:.2f} %".format(
+            val_far * 100))
+        print("  validation frr:\t\t{:.2f} %".format(
+            val_frr * 100))
 
-    # print("Val loss per epoch:", val_loss_per_epoch)
-    # print("Train loss per epoch:", train_loss_per_epoch)
+        val_acc_per_epoch.append(val_acc)
+        train_loss_per_epoch.append(train_err / train_batches)
+
+
+    print("Val acc per epoch:", val_acc_per_epoch)
+    print("Train loss per epoch:", train_loss_per_epoch)
     # After training, we compute and print the test error:
-    val_fp = 0
-    val_fn = 0
-    val_tp = 0
-    val_tn = 0
-    for id_num in questioned_dict_val:
-        print ("For id number: ", id_num)
-        (val_id_fp, val_id_fn, val_id_tp, val_id_tn) = (0, 0, 0, 0)
-        questioned_gen_val = questioned_dict_val[id_num]['genuine']
-        questioned_forged_val = questioned_dict_val[id_num]['forged']
-        references = ref_dict[id_num]
-        for questioned_image in questioned_gen_val:
-            print ("Predictions for genuine image: ", questioned_image)
-            X_val = []
-            y_val = []
-            for ref in references:
-                load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.SIMILAR)
-            X_val = np.stack(X_val, axis=0).astype('float32')
-            y_val = np.stack(y_val, axis=0).astype('int32')
-            predictions = val_fn_comparison(X_val)
-            predictions = predictions[0]
-            print(predictions)
-            counts = np.bincount(predictions)
-            majority = np.argmax(counts)
-            if majority == load_data.SIMILAR:
-                val_tp += 1
-                val_id_tp += 1
-            else:
-                val_fn += 1
-                val_id_fn += 1
-        for questioned_image in questioned_forged_val:
-            print ("Predictions for forged image: ", questioned_image)
-            X_val = []
-            y_val = []
-            for ref in references:
-                
-                load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.DISSIMILAR)
-            X_val = np.stack(X_val, axis=0).astype('float32')
-            y_val = np.stack(y_val, axis=0).astype('int32')
-            predictions = val_fn_comparison(X_val)
-            predictions = predictions[0]
-            print (predictions)
-            counts = np.bincount(predictions)
-            majority = np.argmax(counts)
-            if majority == load_data.DISSIMILAR:
-                val_tn += 1
-                val_id_tn += 1
-            else:
-                val_fp += 1
-                val_id_fp += 1
-        val_id_frr = float(val_id_fn) / (val_id_tp + val_id_fn)
-        val_id_far = float(val_id_fp) / (val_id_fp + val_id_tn)
-        print ('val_id_frr', val_id_frr)
-        print ('val_id_far', val_id_far)
-
-
-    total = val_fp + val_tn + val_fn + val_tp
-    val_frr = float(val_fn) / (val_tp + val_fn)
-    val_far = float(val_fp) / (val_fp + val_tn)
-
-    print("val_frr: ", val_frr)
-    print("val_far: ", val_far)
+    
 #    test_err = 0
 #    test_acc = 0
 #    test_far = 0
