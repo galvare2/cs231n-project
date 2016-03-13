@@ -37,7 +37,7 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     all_params = lasagne.layers.get_all_params(network, trainable=True)
     # Get all the parameters we don't want to train
     fixed_params = lasagne.layers.get_all_params(net[LAST_FIXED_LAYER])
-    params = [x for x in all_params if x not in fixed_params]
+    params = all_params #[x for x in all_params if x not in fixed_params]
     loss = lasagne.objectives.categorical_crossentropy(prediction, target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2)
     loss = loss.mean()
     # We could add some weight decay as well here, see lasagne.regularization.
