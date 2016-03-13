@@ -22,7 +22,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
+def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -37,7 +37,7 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     all_params = lasagne.layers.get_all_params(network, trainable=True)
     # Get all the parameters we don't want to train
     fixed_params = lasagne.layers.get_all_params(net[LAST_FIXED_LAYER])
-    params = all_params #[x for x in all_params if x not in fixed_params]
+    params = [x for x in all_params if x not in fixed_params]
     loss = lasagne.objectives.categorical_crossentropy(prediction, target_var) + REG * lasagne.regularization.apply_penalty(params, lasagne.regularization.l2)
     loss = loss.mean()
     # We could add some weight decay as well here, see lasagne.regularization.
