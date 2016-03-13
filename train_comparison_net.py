@@ -22,7 +22,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
+def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -102,77 +102,81 @@ def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
-        # And a full pass over the validation data:
-        gen_counts_this_epoch = []
-        forged_counts_this_epoch = []
-        (val_fp, val_fn, val_tp, val_tn) = (0, 0, 0, 0,)
-        discard = 0
-        for id_num in questioned_dict_val:
-            discard += 1
-            if discard % 2 == 0: continue
-            print ("Validating for id number: ", id_num)
-            print ("Genuine")
-            questioned_gen_val = questioned_dict_val[id_num]['genuine']
-            questioned_forged_val = questioned_dict_val[id_num]['forged']
-            references = ref_dict[id_num]
-            for questioned_image in questioned_gen_val:
-                #print ("Predictions for genuine image: ", questioned_image)
-                X_val = []
-                y_val = []
-                for ref in references:
-                    load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.SIMILAR)
-                X_val = np.stack(X_val, axis=0).astype('float32')
-                y_val = np.stack(y_val, axis=0).astype('int32')
-                predictions = val_fn_comparison(X_val)
-                predictions = predictions[0]
-                count = np.sum(predictions)
-                print (predictions, "Count:", count)
-                gen_counts_this_epoch.append(count)
-                if count > 6:
-                    val_tp += 1
-                else:
-                    val_fn += 1
-            print ("Forged")
-            for questioned_image in questioned_forged_val:
-                #print ("Predictions for forged image: ", questioned_image)
-                X_val = []
-                y_val = []
-                for ref in references:
-                    load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.DISSIMILAR)
-                X_val = np.stack(X_val, axis=0).astype('float32')
-                y_val = np.stack(y_val, axis=0).astype('int32')
-                predictions = val_fn_comparison(X_val)
-                predictions = predictions[0]
-                count = np.sum(predictions)
-                print (predictions, "Count:", count)
-                forged_counts_this_epoch.append(count)
-                if count <= 6: 
-                    val_tn += 1
-                else:
-                    val_fp += 1
-        total = val_fp + val_tn + val_fn + val_tp
-        val_frr = float(val_fn) / (val_tp + val_fn)
-        val_far = float(val_fp) / (val_fp + val_tn)
-        val_acc = float(val_tp + val_tn) / total
-
         print("Epoch {} of {} took {:.3f}s".format(
-            epoch + 1, num_epochs, time.time() - start_time))
+        epoch + 1, num_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-        print("  validation accuracy:\t\t{:.2f} %".format(
-            val_acc * 100))
-        print("  validation far:\t\t{:.2f} %".format(
-            val_far * 100))
-        print("  validation frr:\t\t{:.2f} %".format(
-            val_frr * 100))
+    
+    
+    # And a full pass over the validation data:
+    gen_counts_this_epoch = []
+    forged_counts_this_epoch = []
+    (val_fp, val_fn, val_tp, val_tn) = (0, 0, 0, 0,)
+    discard = 0
+    for id_num in questioned_dict_val:
+        discard += 1
+        if discard % 2 == 0: continue
+        print ("Validating for id number: ", id_num)
+        print ("Genuine")
+        questioned_gen_val = questioned_dict_val[id_num]['genuine']
+        questioned_forged_val = questioned_dict_val[id_num]['forged']
+        references = ref_dict[id_num]
+        for questioned_image in questioned_gen_val:
+            #print ("Predictions for genuine image: ", questioned_image)
+            X_val = []
+            y_val = []
+            for ref in references:
+                load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.SIMILAR)
+            X_val = np.stack(X_val, axis=0).astype('float32')
+            y_val = np.stack(y_val, axis=0).astype('int32')
+            predictions = val_fn_comparison(X_val)
+            predictions = predictions[0]
+            count = np.sum(predictions)
+            print (predictions, "Count:", count)
+            gen_counts_this_epoch.append(count)
+            if count > 6:
+                val_tp += 1
+            else:
+                val_fn += 1
+        print ("Forged")
+        for questioned_image in questioned_forged_val:
+            #print ("Predictions for forged image: ", questioned_image)
+            X_val = []
+            y_val = []
+            for ref in references:
+                load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.DISSIMILAR)
+            X_val = np.stack(X_val, axis=0).astype('float32')
+            y_val = np.stack(y_val, axis=0).astype('int32')
+            predictions = val_fn_comparison(X_val)
+            predictions = predictions[0]
+            count = np.sum(predictions)
+            print (predictions, "Count:", count)
+            forged_counts_this_epoch.append(count)
+            if count <= 6: 
+                val_tn += 1
+            else:
+                val_fp += 1
+            if count == 12:
+                print(questioned_image)
+    total = val_fp + val_tn + val_fn + val_tp
+    val_frr = float(val_fn) / (val_tp + val_fn)
+    val_far = float(val_fp) / (val_fp + val_tn)
+    val_acc = float(val_tp + val_tn) / total
 
-        val_acc_per_epoch.append(val_acc)
-        train_loss_per_epoch.append(train_err / train_batches)
-        gen_hist = np.bincount(gen_counts_this_epoch)
-        gen_counts_per_epoch.append(gen_hist)
-        forged_hist = np.bincount(forged_counts_this_epoch)
-        forged_counts_per_epoch.append(forged_hist)
-        print("Histogram of predictions, genuine:", gen_hist)
-        print("Histogram of predictions, forged:", forged_hist)
+    print("  validation accuracy:\t\t{:.2f} %".format(
+        val_acc * 100))
+    print("  validation far:\t\t{:.2f} %".format(
+        val_far * 100))
+    print("  validation frr:\t\t{:.2f} %".format(
+        val_frr * 100))
+
+    val_acc_per_epoch.append(val_acc)
+    train_loss_per_epoch.append(train_err / train_batches)
+    gen_hist = np.bincount(gen_counts_this_epoch)
+    gen_counts_per_epoch.append(gen_hist)
+    forged_hist = np.bincount(forged_counts_this_epoch)
+    forged_counts_per_epoch.append(forged_hist)
+    print("Histogram of predictions, genuine:", gen_hist)
+    print("Histogram of predictions, forged:", forged_hist)
 
 
     print("Val acc per epoch:", val_acc_per_epoch)
