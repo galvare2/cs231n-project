@@ -100,8 +100,7 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
-            if train_batches > 2: break
-        # And a full pass over the validation data:
+           # And a full pass over the validation data:
         (val_fp, val_fn, val_tp, val_tn) = (0, 0, 0, 0,)
         discard = 0
         for id_num in questioned_dict_val:
