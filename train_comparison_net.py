@@ -22,7 +22,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
+def train_net(num_epochs=3, batch_size=100, learning_rate=1e-4):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -81,7 +81,7 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
     val_fn = theano.function([input_var, target_var],
         [test_loss, test_acc, true_positives, true_negatives, false_positives, false_negatives])
 
-    val_fn_comparison = theano.function([input_var], [test_prediction])
+    val_fn_comparison = theano.function([input_var], [preds])
 
     # Finally, launch the training loop.
     print("Starting training...")
@@ -90,44 +90,18 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
     train_loss_per_epoch = []
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
+        print("Epoch number: ", epoch)
         train_err = 0
         train_batches = 0
         start_time = time.time()
 
         for batch in iterate_minibatches(X_train, y_train, batch_size):
+            print('batch number: ', train_batches)
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
-
         # And a full pass over the validation data:
-        val_err = 0
-        val_acc = 0
-        val_far = 0
-        val_frr = 0
-        val_batches = 0
-        for batch in iterate_minibatches(X_val, y_val, batch_size):
-            inputs, targets = batch
-            err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
-            val_err += err
-            val_acc += acc
-            val_frr += float(f_n) / (t_p + f_n)
-            val_far += float(f_p) / (f_p + t_n)
-            val_batches += 1
-
-        # Then we print the results for this epoch:
-        print("Epoch {} of {} took {:.3f}s".format(
-            epoch + 1, num_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-        print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
-        print("  validation accuracy:\t\t{:.2f} %".format(
-            val_acc / val_batches * 100))
-        print("  validation far:\t\t{:.2f} %".format(
-            val_far / val_batches * 100))
-        print("  validation frr:\t\t{:.2f} %".format(
-            val_frr / val_batches * 100))
-
-        val_loss_per_epoch.append(val_err / val_batches)
-        train_loss_per_epoch.append(train_err / train_batches)
 
     # print("Val loss per epoch:", val_loss_per_epoch)
     # print("Train loss per epoch:", train_loss_per_epoch)
@@ -137,18 +111,22 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
     val_tp = 0
     val_tn = 0
     for id_num in questioned_dict_val:
+        print ("For id number: ", id_num)
         (val_id_fp, val_id_fn, val_id_tp, val_id_tn) = (0, 0, 0, 0)
-        X_val = []
-        y_val = []
         questioned_gen_val = questioned_dict_val[id_num]['genuine']
         questioned_forged_val = questioned_dict_val[id_num]['forged']
         references = ref_dict[id_num]
         for questioned_image in questioned_gen_val:
+            print ("Predictions for genuine image: ", questioned_image)
+            X_val = []
+            y_val = []
             for ref in references:
                 load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.SIMILAR)
             X_val = np.stack(X_val, axis=0).astype('float32')
             y_val = np.stack(y_val, axis=0).astype('int32')
             predictions = val_fn_comparison(X_val)
+            predictions = predictions[0]
+            print(predictions)
             counts = np.bincount(predictions)
             majority = np.argmax(counts)
             if majority == load_data.SIMILAR:
@@ -157,13 +135,18 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
             else:
                 val_fn += 1
                 val_id_fn += 1
-
         for questioned_image in questioned_forged_val:
+            print ("Predictions for forged image: ", questioned_image)
+            X_val = []
+            y_val = []
             for ref in references:
+                
                 load_data.add_comparison_image(questioned_image, ref, X_val, y_val, load_data.DISSIMILAR)
             X_val = np.stack(X_val, axis=0).astype('float32')
             y_val = np.stack(y_val, axis=0).astype('int32')
             predictions = val_fn_comparison(X_val)
+            predictions = predictions[0]
+            print (predictions)
             counts = np.bincount(predictions)
             majority = np.argmax(counts)
             if majority == load_data.DISSIMILAR:
@@ -174,41 +157,32 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4):
                 val_id_fp += 1
         val_id_frr = float(val_id_fn) / (val_id_tp + val_id_fn)
         val_id_far = float(val_id_fp) / (val_id_fp + val_id_tn)
-        print 'val_id_frr', val_id_frr
-        print 'val_id_far', val_id_far
+        print ('val_id_frr', val_id_frr)
+        print ('val_id_far', val_id_far)
 
 
     total = val_fp + val_tn + val_fn + val_tp
     val_frr = float(val_fn) / (val_tp + val_fn)
     val_far = float(val_fp) / (val_fp + val_tn)
 
-    print("Epoch {} of {} took {:.3f}s".format(
-            epoch + 1, num_epochs, time.time() - start_time))
-        print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-        print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
-        print("  validation accuracy:\t\t{:.2f} %".format(
-            val_acc / val_batches * 100))
-        print("  validation far:\t\t{:.2f} %".format(
-            val_far / val_batches * 100))
-        print("  validation frr:\t\t{:.2f} %".format(
-            val_frr / val_batches * 100))
-
-    test_err = 0
-    test_acc = 0
-    test_far = 0
-    test_frr = 0
-    test_batches = 0
-    for batch in iterate_minibatches(X_test, y_test, batch_size):
-        inputs, targets = batch
-        err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
-        test_err += err
-        test_acc += acc
-        test_frr += float(f_n) / (t_p + f_n)
-        test_far += float(f_p) / (f_p + t_n)
-        test_batches += 1
-    print("Final results:")
-    print("  test loss: withheld until final submission lolol")
-    print(" test accuracy: withheld until final submission lolol")
+    print("val_frr: ", val_frr)
+    print("val_far: ", val_far)
+#    test_err = 0
+#    test_acc = 0
+#    test_far = 0
+#    test_frr = 0
+#    test_batches = 0
+#    for batch in iterate_minibatches(X_test, y_test, batch_size):
+#        inputs, targets = batch
+#        err, acc, t_p, t_n, f_p, f_n = val_fn(inputs, targets)
+#        test_err += err
+#        test_acc += acc
+#        test_frr += float(f_n) / (t_p + f_n)
+#        test_far += float(f_p) / (f_p + t_n)
+#        test_batches += 1
+#    print("Final results:")
+#    print("  test loss: withheld until final submission lolol")
+#    print(" test accuracy: withheld until final submission lolol")
 
     # Optionally, you could now dump the network weights to a file like this:
     # np.savez('model.npz', *lasagne.layers.get_all_param_values(network))

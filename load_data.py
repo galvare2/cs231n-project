@@ -65,7 +65,7 @@ def load_data_comparison():
 	for directory in listdir(directories['genuine_test_ref']):
 		if directory.startswith('.'): continue
 		id_num = int(directory)
-		ref_dict[id_num] = [os.path.join(directory, name) for name in listdir(os.path.join(directories['genuine_test_ref'], directory)) if not name.startswith('.')]
+		ref_dict[id_num] = [os.path.join(directories['genuine_test_ref'], directory, name) for name in listdir(os.path.join(directories['genuine_test_ref'], directory)) if not name.startswith('.')]
 	
 	val_counter = 0
 
@@ -82,11 +82,11 @@ def load_data_comparison():
 			if filename.startswith('.'): continue
 			if len(filename) == GENUINE_FILENAME_LENGTH:
 				gen_list = id_dict['genuine']
-				gen_list.append(os.path.join(directory, filename))
+				gen_list.append(os.path.join(directories['questioned_test'],directory, filename))
 				questioned_dict[id_num]['genuine'] = gen_list
 			else:
 				forged_list = id_dict['forged']
-				forged_list.append(os.path.join(directory, filename))
+				forged_list.append(os.path.join(directories['questioned_test'], directory, filename))
 				questioned_dict[id_num]['forged'] = forged_list
 		val_counter += 1
 		print 'questioned_dict', questioned_dict
