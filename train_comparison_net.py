@@ -88,6 +88,8 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
     # We iterate over epochs:
     val_acc_per_epoch = []
     train_loss_per_epoch = []
+    gen_counts_per_epoch = []
+    forged_counts_per_epoch = []
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
         print("Epoch number: ", epoch)
@@ -100,13 +102,16 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
-           # And a full pass over the validation data:
+        # And a full pass over the validation data:
+        gen_counts_this_epoch = []
+        forged_counts_this_epoch = []
         (val_fp, val_fn, val_tp, val_tn) = (0, 0, 0, 0,)
         discard = 0
         for id_num in questioned_dict_val:
             discard += 1
             if discard % 2 == 0: continue
             print ("Validating for id number: ", id_num)
+            print ("Genuine")
             questioned_gen_val = questioned_dict_val[id_num]['genuine']
             questioned_forged_val = questioned_dict_val[id_num]['forged']
             references = ref_dict[id_num]
@@ -120,13 +125,15 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
                 y_val = np.stack(y_val, axis=0).astype('int32')
                 predictions = val_fn_comparison(X_val)
                 predictions = predictions[0]
-                print(predictions)
                 counts = np.bincount(predictions)
+                print (predictions, "Count:", counts[1])
+                gen_counts_this_epoch.append(counts[1])
                 majority = np.argmax(counts)
                 if majority == load_data.SIMILAR:
                     val_tp += 1
                 else:
                     val_fn += 1
+            print ("Forged")
             for questioned_image in questioned_forged_val:
                 #print ("Predictions for forged image: ", questioned_image)
                 X_val = []
@@ -137,8 +144,9 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
                 y_val = np.stack(y_val, axis=0).astype('int32')
                 predictions = val_fn_comparison(X_val)
                 predictions = predictions[0]
-                print (predictions)
                 counts = np.bincount(predictions)
+                print (predictions, "Count:", counts[1])
+                forged_counts_this_epoch.apend(counts[1])
                 majority = np.argmax(counts)
                 if majority == load_data.DISSIMILAR:
                     val_tn += 1
@@ -161,6 +169,12 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
 
         val_acc_per_epoch.append(val_acc)
         train_loss_per_epoch.append(train_err / train_batches)
+        gen_hist = np.bincounts(gen_counts_this_epoch)
+        gen_counts_per_epoch.append(gen_hist)
+        forged_hist = np.bincounts(forged_counts_this_epoch)
+        forged_counts_per_epoch.append(forged_hist)
+        print("Histogram of predictions, genuine:", gen_hist)
+        print("Histogram of predictions, forged:", forged_hist)
 
 
     print("Val acc per epoch:", val_acc_per_epoch)
