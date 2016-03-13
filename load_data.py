@@ -26,7 +26,7 @@ directories_dutch = {
 directories_chinese = {
 'genuine_train': '../trainingSet/OfflineSignatures/Chinese/TrainingSet/Offline Genuine',
 'forge_train': '../trainingSet/OfflineSignatures/Chinese/TrainingSet/Offline Forgeries',
-'genuine_test_ref': '../Testdata_SigComp2011 2/SigComp11-Offlinetestset/Chinese/Reference(115)',
+'genuine_test_ref': '../Testdata_SigComp2011 2/SigComp11-Offlinetestset/Chinese/Ref(115)',
  'questioned_test': '../Testdata_SigComp2011 2/SigComp11-Offlinetestset/Chinese/Questioned(487)'
 }
 
