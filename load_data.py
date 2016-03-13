@@ -35,7 +35,7 @@ directories_chinese = {
  'questioned_test': '../Testdata_SigComp2011 2/SigComp11-Offlinetestset/Chinese/Questioned(487)'
 }
 
-directories = directories_chinese
+directories = directories_dutch
 
 def load_data_comparison():
 	train_id_dict = {}
@@ -66,7 +66,6 @@ def load_data_comparison():
 		if directory.startswith('.'): continue
 		id_num = int(directory)
 		ref_dict[id_num] = [os.path.join(directory, name) for name in listdir(os.path.join(directories['genuine_test_ref'], directory)) if not name.startswith('.')]
-	print 'ref_dict', ref_dict
 	
 	val_counter = 0
 
@@ -99,10 +98,10 @@ def load_data_comparison():
 
 	y_train = np.stack(y_train, axis=0).astype('int32')
 
-	np.random.seed(5)
-	p = np.random.permutation(len(y_train))
-	X_train = X_train[p, :, :, :]
-	y_train = y_train[p]
+#	np.random.seed(5)
+#	p = np.random.permutation(len(y_train))
+#	X_train = X_train[p, :, :, :]
+##	y_train = y_train[p]
 	# Apply cutoffs to separate out the data
 	# train_cutoff_gen = int(len(X_gen) * (1 - TEST_DATA_RATIO - VAL_DATA_RATIO)) # Apply cutoff
 	# val_cutoff_gen = int(len(X_gen) * (1 - TEST_DATA_RATIO))
@@ -134,7 +133,7 @@ def load_data_comparison():
 def make_comparison_training_set(train_id_dict):
 	X_train = []
 	y_train = []
-	for _,id_dict in train_id_dict.iteritems():
+	for id_num ,id_dict in train_id_dict.iteritems():
 		gen_list = id_dict['genuine']
 		forged_list = id_dict['forged']
 		for gen in gen_list:
@@ -142,6 +141,7 @@ def make_comparison_training_set(train_id_dict):
 				add_comparison_image(gen, forged, X_train, y_train, DISSIMILAR)
 			for gen2 in gen_list:
 				add_comparison_image(gen, gen2, X_train, y_train, SIMILAR)
+                print id_num, " done"                 
 	return X_train, y_train
 
 
@@ -266,7 +266,7 @@ def add_image(X, y, label, filename, directory):
 		y.append(label)
 
 def main():
-	load_data_comparison()
+    pass
 
 if __name__ == '__main__':
 	main()
