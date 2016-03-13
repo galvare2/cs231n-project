@@ -125,11 +125,10 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
                 y_val = np.stack(y_val, axis=0).astype('int32')
                 predictions = val_fn_comparison(X_val)
                 predictions = predictions[0]
-                counts = np.bincount(predictions)
-                print (predictions, "Count:", counts[1])
-                gen_counts_this_epoch.append(counts[1])
-                majority = np.argmax(counts)
-                if majority == load_data.SIMILAR:
+                count = np.sum(predictions)
+                print (predictions, "Count:", count)
+                gen_counts_this_epoch.append(count)
+                if count > 6:
                     val_tp += 1
                 else:
                     val_fn += 1
@@ -144,11 +143,10 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
                 y_val = np.stack(y_val, axis=0).astype('int32')
                 predictions = val_fn_comparison(X_val)
                 predictions = predictions[0]
-                counts = np.bincount(predictions)
-                print (predictions, "Count:", counts[1])
-                forged_counts_this_epoch.apend(counts[1])
-                majority = np.argmax(counts)
-                if majority == load_data.DISSIMILAR:
+                count = np.sum(predictions)
+                print (predictions, "Count:", count)
+                forged_counts_this_epoch.append(count)
+                if count <= 6: 
                     val_tn += 1
                 else:
                     val_fp += 1
@@ -169,9 +167,9 @@ def train_net(num_epochs=1, batch_size=100, learning_rate=1e-4):
 
         val_acc_per_epoch.append(val_acc)
         train_loss_per_epoch.append(train_err / train_batches)
-        gen_hist = np.bincounts(gen_counts_this_epoch)
+        gen_hist = np.bincount(gen_counts_this_epoch)
         gen_counts_per_epoch.append(gen_hist)
-        forged_hist = np.bincounts(forged_counts_this_epoch)
+        forged_hist = np.bincount(forged_counts_this_epoch)
         forged_counts_per_epoch.append(forged_hist)
         print("Histogram of predictions, genuine:", gen_hist)
         print("Histogram of predictions, forged:", forged_hist)
