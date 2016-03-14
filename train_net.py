@@ -22,7 +22,7 @@ def iterate_minibatches(inputs, targets, batchsize):
         excerpt = slice(start_idx, start_idx+batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4, unseen=False):
+def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4, unseen=False, update_method=''):
     # Prepare Theano variables for inputs and targets
     input_var = T.tensor4('inputs')
     target_var = T.ivector('targets')
@@ -51,8 +51,27 @@ def train_net(num_epochs=20, batch_size=50, learning_rate=1e-4, unseen=False):
     # Descent (SGD) with Nesterov momentum, but Lasagne offers plenty more.
     
     # First get all the parameters
-    updates = lasagne.updates.nesterov_momentum(
-            loss, params, learning_rate=learning_rate, momentum=0.9)
+    if update_method.lower()=='nesterov' or update_method=='':
+        updates = lasagne.updates.nesterov_momentum(
+                loss, params, learning_rate=learning_rate, momentum=0.9)
+    elif update_method.lower()=='momentum':
+        updates = lasagne.updates.momentum(
+                loss, params, learning_rate=learning_rate, momentum=0.9)
+    elif update_method.lower()=='sgd':
+        updates = lasagne.updates.sgd(
+                loss, params, learning_rate=learning_rate)
+    elif update_method.lower()=='adam':
+        updates = lasagne.updates.adam(
+                loss, params, learning_rate=learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-08)
+    elif update_method.lower()=='rmsprop': # typically better than adaGrad
+        updates = lasagne.updates.rmsprop(
+                loss, params, learning_rate=learning_rate, rho=0.9, epsilon=1e-06)
+    elif update_method.lower()=='adadelta':
+        updates = lasagne.updates.adadelta(
+                loss, params, learning_rate=learning_rate, rho=0.9, epsilon=1e-06)
+    else:
+        raise IOError("Not an acceptable parameter update method.")
+
     #updates = lasagne.updates.adam(
      #       loss, params, learning_rate=learning_rate) 
     # Create a loss expression for validation/testing. The crucial difference
