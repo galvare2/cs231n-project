@@ -1,0 +1,130 @@
+ ----------------------------- 
+ ----- Parameter update method: sgd
+time.struct_time(tm_year=2016, tm_mon=3, tm_mday=14, tm_hour=1, tm_min=50, tm_sec=29, tm_wday=0, tm_yday=74, tm_isdst=0)
+hi
+Loading data, standard task...
+('y train class skew:', array([ 625, 1211]))
+('y test class skew:', array([ 74, 156]))
+train_fn set up.
+Starting training...
+Epoch 1 of 20 took 100.580s
+  training loss:		5.490056
+  validation loss:		4.840993
+  validation accuracy:		78.50 %
+  validation far:		55.36 %
+  validation frr:		8.42 %
+Epoch 2 of 20 took 100.546s
+  training loss:		5.284065
+  validation loss:		4.800955
+  validation accuracy:		81.00 %
+  validation far:		43.53 %
+  validation frr:		9.73 %
+Epoch 3 of 20 took 100.563s
+  training loss:		5.186577
+  validation loss:		4.803347
+  validation accuracy:		81.00 %
+  validation far:		27.23 %
+  validation frr:		15.99 %
+Epoch 4 of 20 took 100.605s
+  training loss:		5.108418
+  validation loss:		4.760713
+  validation accuracy:		84.00 %
+  validation far:		34.45 %
+  validation frr:		9.08 %
+Epoch 5 of 20 took 100.590s
+  training loss:		5.071385
+  validation loss:		4.740866
+  validation accuracy:		84.50 %
+  validation far:		36.01 %
+  validation frr:		7.61 %
+Epoch 6 of 20 took 100.604s
+  training loss:		5.038848
+  validation loss:		4.737881
+  validation accuracy:		85.00 %
+  validation far:		32.37 %
+  validation frr:		8.34 %
+Epoch 7 of 20 took 100.584s
+  training loss:		4.993481
+  validation loss:		4.724055
+  validation accuracy:		85.50 %
+  validation far:		30.58 %
+  validation frr:		8.34 %
+Epoch 8 of 20 took 100.597s
+  training loss:		4.943313
+  validation loss:		4.718843
+  validation accuracy:		86.50 %
+  validation far:		28.79 %
+  validation frr:		7.65 %
+Epoch 9 of 20 took 100.607s
+  training loss:		4.900684
+  validation loss:		4.705742
+  validation accuracy:		86.50 %
+  validation far:		28.79 %
+  validation frr:		7.65 %
+Epoch 10 of 20 took 100.611s
+  training loss:		4.873181
+  validation loss:		4.705906
+  validation accuracy:		86.50 %
+  validation far:		28.79 %
+  validation frr:		7.65 %
+Epoch 11 of 20 took 100.628s
+  training loss:		4.890610
+  validation loss:		4.701478
+  validation accuracy:		86.50 %
+  validation far:		27.23 %
+  validation frr:		8.34 %
+Epoch 12 of 20 took 100.603s
+  training loss:		4.859800
+  validation loss:		4.690436
+  validation accuracy:		86.50 %
+  validation far:		27.23 %
+  validation frr:		8.34 %
+Epoch 13 of 20 took 100.592s
+  training loss:		4.844371
+  validation loss:		4.676488
+  validation accuracy:		88.00 %
+  validation far:		27.23 %
+  validation frr:		6.25 %
+Epoch 14 of 20 took 100.628s
+  training loss:		4.844973
+  validation loss:		4.663725
+  validation accuracy:		88.50 %
+  validation far:		27.23 %
+  validation frr:		5.56 %
+Epoch 15 of 20 took 100.588s
+  training loss:		4.789808
+  validation loss:		4.660827
+  validation accuracy:		88.50 %
+  validation far:		27.23 %
+  validation frr:		5.56 %
+Epoch 16 of 20 took 100.595s
+  training loss:		4.785598
+  validation loss:		4.652880
+  validation accuracy:		90.00 %
+  validation far:		25.15 %
+  validation frr:		4.21 %
+Epoch 17 of 20 took 100.599s
+  training loss:		4.805169
+  validation loss:		4.645257
+  validation accuracy:		91.00 %
+  validation far:		25.15 %
+  validation frr:		2.82 %
+Epoch 18 of 20 took 100.606s
+  training loss:		4.745539
+  validation loss:		4.642689
+  validation accuracy:		91.00 %
+  validation far:		25.15 %
+  validation frr:		2.82 %
+Epoch 19 of 20 took 100.617s
+  training loss:		4.774286
+  validation loss:		4.640359
+  validation accuracy:		91.00 %
+  validation far:		25.15 %
+  validation frr:		2.82 %
+Epoch 20 of 20 took 100.621s
+  training loss:		4.749937
+  validation loss:		4.633875
+  validation accuracy:		91.00 %
+  validation far:		25.15 %
+  validation frr:		2.82 %
+Val loss per epoch: [4.8409932851791382, 4.8009545803070068, 4.8033468723297119, 4.760712742805481, 4.7408664226531982, 4.737881064414978, 4.7240549325942993, 4.7188428640365601, 4.7057421207427979, 4.7059061527252197, 4.7014780044555664, 4.690435528755188, 4.6764878034591675, 4.6637253761291504, 4.6608268022537231, 4.6528801918029785, 4.6452571153640747
